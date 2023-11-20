@@ -69,8 +69,56 @@ pub fn list_employees(
     on_end(map)
 }
 
-pub fn remove_employee() {
-    println!("Removing empolyee")
+pub fn remove_employee(
+    map: &mut HashMap<String, Vec<String>>,
+    on_end: fn(map: &mut HashMap<String, Vec<String>>) -> (),
+) {
+    let employees: Vec<String> = map.values().flat_map(|v| v.iter()).cloned().collect();
+
+    if employees.len() < 1 {
+        println!("There are no employees at your company. Register someone first!");
+        return main_loop(map);
+    }
+
+    let employee = Select::with_theme(&ColorfulTheme::default())
+        .with_prompt("Select the employee to remove")
+        .default(0)
+        .items(&employees[..])
+        .interact()
+        .unwrap();
+
+    let employee = &employees[employee];
+
+    let mut department = String::new();
+
+    for (dept, names) in map.clone() {
+        if names.contains(employee) {
+            department = dept.clone()
+        }
+    }
+
+    if let Some(vec) = map.get_mut(&department) {
+        let index = vec.iter().position(|e| e == employee);
+
+        match index {
+            Some(i) => match i {
+                0 => {
+                    map.remove(&department);
+                    println!("Employee removed sucessfully");
+                    on_end(map)
+                }
+                _ => {
+                    vec.remove(i);
+                    println!("Employee removed sucessfully");
+                    on_end(map)
+                }
+            },
+            None => unreachable!(),
+        };
+    } else {
+        println!("Department not found");
+        on_end(map)
+    }
 }
 
 pub fn main_loop(map: &mut HashMap<String, Vec<String>>) {
@@ -89,7 +137,7 @@ pub fn main_loop(map: &mut HashMap<String, Vec<String>>) {
 
     match actions[action] {
         "Insert new employee" => add_empoyee(map, main_loop),
-        "Remove employee" => remove_employee(),
+        "Remove employee" => remove_employee(map, main_loop),
         "List employees" => list_employees(map, main_loop),
         "Exit" => exit(),
         _ => unreachable!(),

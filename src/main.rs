@@ -8,6 +8,4 @@ fn main() {
     let mut map = HashMap::new();
 
     main_loop(&mut map);
-
-    println!("Actual map: {:?}", map)
 }
